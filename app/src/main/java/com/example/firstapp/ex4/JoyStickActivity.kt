@@ -5,7 +5,6 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.EditText
-import TcpClient
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -17,7 +16,6 @@ import java.net.Socket
 
 class JoyStickActivity : AppCompatActivity() {
 
-    private lateinit var tcpClient : TcpClient
     private var ip: String = ""
     private var port: String = ""
     private lateinit var socket: Socket
