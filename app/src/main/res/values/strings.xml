@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Plane stick</string>
+    <string name="IP_label">IP:</string>
+    <string name="PORT_label">Port:</string>
+    <string name="Connect_button">Connect</string>
+</resources>
