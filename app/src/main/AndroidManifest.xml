@@ -12,7 +12,8 @@
             android:roundIcon="@mipmap/icon_plane_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".JoyStickActivity">
+        <activity android:name=".JoyStickActivity"
+                  android:configChanges="orientation|screenSize">
         </activity>
         <activity android:name=".MainActivity">
             <intent-filter>

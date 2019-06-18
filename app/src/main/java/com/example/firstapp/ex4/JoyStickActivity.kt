@@ -19,15 +19,17 @@ import android.support.v4.view.MotionEventCompat
 import android.view.MotionEvent
 import android.view.MotionEvent.INVALID_POINTER_ID
 import android.view.ScaleGestureDetector
+import java.lang.Math.abs
 
 
 class JoyStickDrawing (context: Context): View (context) {
 
     // The ‘active pointer’ is the one currently moving our object.
-    private var mActivePointerId = INVALID_POINTER_ID
-    private var xPos : Float = 0.toFloat()
-    private var yPos : Float = 0.toFloat()
-    private var radius : Float = 0.toFloat()
+    private var xPos : Float = 0f
+    private var yPos : Float = 0f
+    private var radius : Float = 0f
+    private var screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
+    private var outerRadius : Float = 0f
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -35,28 +37,71 @@ class JoyStickDrawing (context: Context): View (context) {
         yPos = (height / 2).toFloat()
     }
 
+    fun sendMessage(msg : String) {
+
+        var parent_activity : JoyStickActivity = context as JoyStickActivity
+        var socket : Socket = parent_activity.getSocket()
+        var bufferOut : PrintWriter = parent_activity.getBufferOut()
+
+        if (msg.isNullOrEmpty()) {
+            Toast.makeText(context,"Bad msg.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (socket.isConnected  && !bufferOut.checkError()) {
+            try {
+                bufferOut.println(msg)
+                bufferOut.flush()
+            } catch (e : java.lang.Exception) {
+                Log.e("Exception", e.message)
+            }
+        } else {
+            Log.e("ERROR", "Could not send message")
+        }
+    }
+
+    fun sendToServer() {
+        val normalizedValX = ((xPos - (width / 2)) / (width / 2))
+        val normalizedValY = ((yPos - (height / 2) + outerRadius) / ((height / 2) - outerRadius))
+
+        val msg1 : String = "set aileron to " + (normalizedValX).toString() + "\n"
+        val msg2 : String = "set elevator to " + (normalizedValY).toString() + "\n"
+
+        sendMessage(msg1)
+        sendMessage(msg2)
+    }
+
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         val action = event!!.actionMasked
-        //TODO PREVENT LEAVING OVAL
+
         when (action) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
-                var xTouch = event.getX()
-                var yTouch = event.getY()
-
-                // Check if the new position is inside the joystick
-                if (((xPos + radius) >= xTouch) && ((xPos - radius) <= xTouch)
-                    && ((yPos + radius) >= yTouch) && ((yPos - radius) <= yTouch)) {
-                    xPos = event.getX()
-                    yPos = event.getY()
-                    // Save the ID of this pointer (for dragging)
-                    mActivePointerId = event.getPointerId(0)
-                    invalidate()
-                }
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 xPos = (width / 2).toFloat()
                 yPos = (height / 2).toFloat()
+                invalidate()
+            }
+
+            else -> {
+                val xTouch = event.getX()
+                val yTouch = event.getY()
+                val xCenter = (width / 2).toFloat()
+                val yCenter = (height / 2).toFloat()
+
+                val isTouchOnJoystick = ((xPos + radius) >= xTouch) && ((xPos - radius) <= xTouch)
+                        && ((yPos + radius) >= yTouch) && ((yPos - radius) <= yTouch)
+
+                val isTouchInOval = (abs(xCenter - xTouch) <= outerRadius) && (abs(yCenter - yTouch) <= outerRadius)
+
+                // Check if the new position is on the joystick circle and in the oval
+                if (isTouchOnJoystick && isTouchInOval) {
+                    xPos = event.getX()
+                    yPos = event.getY()
+                    sendToServer()
+                    invalidate()
+                }
+                else if (!isTouchInOval) {
+                    sendToServer()
+                }
             }
         }
         return true
@@ -68,55 +113,36 @@ class JoyStickDrawing (context: Context): View (context) {
         val width = getWidth()
         val height = getHeight()
 
-        val brush = Paint()
-        brush.setARGB (255, 79, 26, 26)
-        brush.setStrokeWidth(20f)
-        brush.setStyle(Paint.Style.STROKE)
-        val screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
-        canvas.drawOval(screen, brush)
-
-        brush.setStyle(Paint.Style.FILL)
-        brush.setARGB (255, 173, 173, 173)
-        canvas.drawOval(screen, brush)
-
         val minor: Int
         if (width < height)
             minor = width
         else
             minor = height
 
+        val brush = Paint()
+        brush.setARGB (255, 79, 26, 26)
+        brush.setStrokeWidth(20f)
+        brush.setStyle(Paint.Style.STROKE)
+
+        screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
+        //canvas.drawOval (screen, brush)
+        outerRadius = (minor / 2).toFloat()
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), outerRadius, brush)
+
+        brush.setStyle(Paint.Style.FILL)
+        brush.setARGB (255, 173, 173, 173)
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), outerRadius, brush)
+
         brush.setStyle(Paint.Style.FILL)
         brush.setARGB (255, 204, 0, 0)
         if (xPos == 0.0f && yPos == 0.0f) {
             xPos = (width / 2).toFloat()
             yPos = (height / 2).toFloat()
-            radius = (minor / 8).toFloat()
         }
+        radius = (minor / 6).toFloat()
+
         canvas.drawCircle(xPos, yPos, radius, brush)
     }
-
-    /*override fun onTouchEvent(event: MotionEvent?): Boolean {
-        val action = event!!.actionMasked
-
-        when (action) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
-                event.also { pointerIndex ->
-                    // Remember where we started (for dragging)
-                    xPos = event.getX()
-                    yPos = event.getY()
-                }
-
-                // Save the ID of this pointer (for dragging)
-                mActivePointerId = event.getPointerId(0)
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
-                xPos = (width / 2).toFloat()
-                yPos = (height / 2).toFloat()
-            }
-        }
-        return true
-    }*/
 }
 
 class JoyStickActivity : AppCompatActivity() {
@@ -127,6 +153,14 @@ class JoyStickActivity : AppCompatActivity() {
     private lateinit var mBufferOut: PrintWriter
     private lateinit var mBufferIn: BufferedReader
 
+    fun getSocket() : Socket {
+        return socket
+    }
+
+    fun getBufferOut() : PrintWriter {
+        return mBufferOut
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(JoyStickDrawing(this))
@@ -135,30 +169,7 @@ class JoyStickActivity : AppCompatActivity() {
         port = intent.getStringExtra("PORT")
 
         ConnectTask().run()
-
-        //findViewById<EditText>(R.id.editText111).setText(ip)
-        //findViewById<EditText>(R.id.editText222).setText(port)
     }
-
-    /*fun onClickBtn(v: View) {
-
-        val msg : String = (findViewById<EditText>(R.id.msg_edittext)).text.toString() + "\n"
-
-        if (msg.isNullOrEmpty()) {
-            Toast.makeText(this, "Bad msg.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (socket.isConnected  && !mBufferOut.checkError()) {
-            try {
-                mBufferOut.println(msg)
-            } catch (e : java.lang.Exception) {
-                Log.e("Exception", e.message)
-            }
-        } else {
-            Log.e("ERROR", "Could not send message")
-        }
-    }*/
 
     override fun onDestroy() {
         DisconnectTask().run()
