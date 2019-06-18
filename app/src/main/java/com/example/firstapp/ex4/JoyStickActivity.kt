@@ -1,7 +1,9 @@
 package com.example.firstapp.ex4
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.*
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -61,8 +63,17 @@ class JoyStickDrawing (context: Context): View (context) {
     }
 
     fun sendToServer() {
-        val normalizedValX = ((xPos - (width / 2)) / (width / 2))
-        val normalizedValY = ((yPos - (height / 2) + outerRadius) / ((height / 2) - outerRadius))
+        // Use normalization formula
+        var normalizedValX = 0f
+        var normalizedValY = 0f
+
+        if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            normalizedValX = (2 * (xPos / width)) - 1
+            normalizedValY = (2 * ((yPos - ((height / 2) + outerRadius)) / (((height / 2) - outerRadius)- ((height / 2) + outerRadius)))) - 1
+        } else {
+            normalizedValX = (2 * ((xPos - ((width / 2) - outerRadius)) / (((width / 2) + outerRadius) - ((width / 2) - outerRadius)))) - 1
+            normalizedValY = (2 * ((yPos - height) / -height)) - 1
+        }
 
         val msg1 : String = "set aileron to " + (normalizedValX).toString() + "\n"
         val msg2 : String = "set elevator to " + (normalizedValY).toString() + "\n"
