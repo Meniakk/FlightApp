@@ -39,7 +39,7 @@ class JoyStickDrawing (context: Context): View (context) {
         yPos = (height / 2).toFloat()
     }
 
-    fun sendMessage(msg : String) {
+    private fun sendMessage(msg : String) {
 
         var parent_activity : JoyStickActivity = context as JoyStickActivity
         var socket : Socket = parent_activity.getSocket()
@@ -62,7 +62,7 @@ class JoyStickDrawing (context: Context): View (context) {
         }
     }
 
-    fun sendToServer() {
+    private fun sendToServer() {
         // Use normalization formula
         var normalizedValX = 0f
         var normalizedValY = 0f
@@ -83,9 +83,8 @@ class JoyStickDrawing (context: Context): View (context) {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
-        val action = event!!.actionMasked
 
-        when (action) {
+        when (event!!.actionMasked) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 xPos = (width / 2).toFloat()
                 yPos = (height / 2).toFloat()
@@ -93,8 +92,8 @@ class JoyStickDrawing (context: Context): View (context) {
             }
 
             else -> {
-                val xTouch = event.getX()
-                val yTouch = event.getY()
+                val xTouch = event.x
+                val yTouch = event.y
                 val xCenter = (width / 2).toFloat()
                 val yCenter = (height / 2).toFloat()
 
@@ -121,30 +120,30 @@ class JoyStickDrawing (context: Context): View (context) {
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas!!.drawRGB (255, 255, 255)
-        val width = getWidth()
-        val height = getHeight()
+        val width = width
+        val height = height
 
         val minor: Int
-        if (width < height)
-            minor = width
+        minor = if (width < height)
+            width
         else
-            minor = height
+            height
 
         val brush = Paint()
         brush.setARGB (255, 79, 26, 26)
-        brush.setStrokeWidth(20f)
-        brush.setStyle(Paint.Style.STROKE)
+        brush.strokeWidth = 20f
+        brush.style = Paint.Style.STROKE
 
         screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
         //canvas.drawOval (screen, brush)
         outerRadius = (minor / 2).toFloat()
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), outerRadius, brush)
 
-        brush.setStyle(Paint.Style.FILL)
+        brush.style = Paint.Style.FILL
         brush.setARGB (255, 173, 173, 173)
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), outerRadius, brush)
 
-        brush.setStyle(Paint.Style.FILL)
+        brush.style = Paint.Style.FILL
         brush.setARGB (255, 204, 0, 0)
         if (xPos == 0.0f && yPos == 0.0f) {
             xPos = (width / 2).toFloat()
