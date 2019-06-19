@@ -22,6 +22,8 @@ import android.view.MotionEvent
 import android.view.MotionEvent.INVALID_POINTER_ID
 import android.view.ScaleGestureDetector
 import java.lang.Math.abs
+import java.lang.Math.sqrt
+import kotlin.math.sqrt
 
 
 class JoyStickDrawing (context: Context): View (context) {
@@ -101,7 +103,8 @@ class JoyStickDrawing (context: Context): View (context) {
                 val isTouchOnJoystick = ((xPos + radius) >= xTouch) && ((xPos - radius) <= xTouch)
                         && ((yPos + radius) >= yTouch) && ((yPos - radius) <= yTouch)
 
-                val isTouchInOval = (abs(xCenter - xTouch) <= outerRadius) && (abs(yCenter - yTouch) <= outerRadius)
+                val isTouchInOval = (sqrt((yCenter - yTouch) * (yCenter - yTouch) + (xCenter - xTouch) * (xCenter - xTouch))) <= outerRadius
+                //val isTouchInOval = (abs(xCenter - xTouch) <= outerRadius) && (abs(yCenter - yTouch) <= outerRadius)
 
                 // Check if the new position is on the joystick circle and in the oval
                 if (isTouchOnJoystick && isTouchInOval) {
