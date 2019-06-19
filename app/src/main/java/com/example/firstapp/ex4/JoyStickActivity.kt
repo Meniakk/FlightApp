@@ -1,4 +1,4 @@
-package com.example.firstapp.ex4
+﻿package com.example.firstapp.ex4
 
 import android.app.Activity
 import android.content.Context
@@ -103,7 +103,6 @@ class JoyStickDrawing (context: Context): View (context) {
                         && ((yPos + radius) >= yTouch) && ((yPos - radius) <= yTouch)
 
                 val isTouchInOval = (sqrt((yCenter - yTouch) * (yCenter - yTouch) + (xCenter - xTouch) * (xCenter - xTouch))) <= outerRadius
-                //val isTouchInOval = (abs(xCenter - xTouch) <= outerRadius) && (abs(yCenter - yTouch) <= outerRadius)
 
                 // Check if the new position is on the joystick circle and in the oval
                 if (isTouchOnJoystick && isTouchInOval) {
@@ -138,7 +137,6 @@ class JoyStickDrawing (context: Context): View (context) {
         brush.style = Paint.Style.STROKE
 
         screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
-        //canvas.drawOval (screen, brush)
         outerRadius = (minor / 2).toFloat()
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), outerRadius, brush)
 
